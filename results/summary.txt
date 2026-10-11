@@ -1,0 +1,92 @@
+=== 01_signal_model.py ===
+Larmor frequency at 1.5 T: 63.87 MHz
+debug: Ernst angle 23.1 deg; 30 deg gives 96 % of the maximum; M_GRE(30 deg) = 0.1352
+realistic: Ernst angle 20.0 deg; 30 deg gives 92 % of the maximum; M_GRE(30 deg) = 0.1204
+
+=== 02_single_stage_bottleneck.py ===
+Transition width: 1.20e-03 of Nyquist
+Kaiser estimate: 6045 taps (odd), 3023 multipliers with symmetry, group delay 3022 samples = 12.1 us
+Zynq-7020 DSP48E1 slices: 220
+
+=== 03_cic_firls_single_path.py ===
+CIC droop at 50 kHz: -0.143 dB
+31-tap cascade: ripple 0.0376 dB, attenuation 69.4 dB from 200 kHz
+Multipliers: 3023 at 250 MHz -> 22 at 1 MHz for the 43-tap design (multiply rate ratio 34,352x)
+
+=== 04_piecewise_target.py ===
+N = 4: droop at band edge -3.65 dB
+   1 segments: max error 1.1167 dB
+   2 segments: max error 0.3485 dB
+   3 segments: max error 0.1685 dB
+   5 segments: max error 0.0651 dB
+   8 segments: max error 0.0265 dB
+  10 segments: max error 0.0172 dB
+  15 segments: max error 0.0078 dB
+  20 segments: max error 0.0044 dB
+N = 3: droop at band edge -2.74 dB
+   1 segments: max error 0.8022 dB
+   2 segments: max error 0.2411 dB
+   3 segments: max error 0.1152 dB
+   5 segments: max error 0.0440 dB
+   8 segments: max error 0.0178 dB
+  10 segments: max error 0.0115 dB
+  15 segments: max error 0.0052 dB
+  20 segments: max error 0.0030 dB
+
+=== 05_five_paths.py ===
+Path  dwell(us)  f_pass(kHz)  f_out(kHz)  M
+   1          4          125         500     400
+   2          5          100         400     500
+   3         10           50         200    1000
+   4         50           10          40    5000
+   5        100            5          20   10000
+
+Path 1, N = 4, single stage M = 400: shortest compensator meeting 0.05 dB / 60 dB
+  stopband edge 0.60 x Nyquist:  87 taps, ripple 0.0493 dB, attenuation 79.5 dB
+  stopband edge 0.70 x Nyquist:  41 taps, ripple 0.0477 dB, attenuation 76.9 dB
+  stopband edge 0.80 x Nyquist:  29 taps, ripple 0.0389 dB, attenuation 88.9 dB
+  stopband edge 0.90 x Nyquist:  19 taps, ripple 0.0320 dB, attenuation 79.6 dB
+  stopband edge 0.95 x Nyquist:  15 taps, ripple 0.0359 dB, attenuation 77.1 dB
+
+=== 06_order_growth_tree.py ===
+Path  chain            raw width (N=3)  pruned to 24
+   1  [10, 10, 4]                   42            18
+   2  [10, 10, 5]                   43            19
+   3  [10, 10, 10]                  46            22
+   4  [10, 10, 10, 5]               53            29
+   5  [10, 10, 10, 10]               56            32
+
+Final bus width for N = 3, 4, 5:
+  Path 1: 42, 52, 60
+  Path 2: 43, 54, 62
+  Path 3: 46, 58, 67
+  Path 4: 53, 68, 79
+  Path 5: 56, 72, 84
+
+Path 5 register widths, chain [10,10,10,10], N = 3: [26, 36, 46, 56]
+Shared [10,10] trunk: CIC logic 5,049 -> 1,887 LUTs (report, Table 11.1): 62.6 % saving
+
+=== 07_image_rejection.py ===
+Path 1 chain [10,10,4], N = 3: 31.4 dB at 375 kHz
+Path 1 chain [10,10,4], N = 4: 41.8 dB at 375 kHz
+Path 1 chain [10,10,4], N = 5: 52.3 dB at 375 kHz
+Stage 1 alone (/10): 131.7 dB
+Stage 2 alone (/10 at 20 MHz): 70.4 dB
+Single-path design (N=4, M=250, 250 MSPS): 102.4 dB
+
+=== 08_tdm_cost.py ===
+config        taps  f_TDM(MHz)  cycles/out  DSP(par)  BRAM36  DSP fold real / IQ
+1 / 140 kHz    143        8.00       25.00        72       2     3 / 6
+1 / 165 kHz     53        8.00       25.00        27       1     2 / 3
+2 / 135 kHz     49        6.40       31.25        25       1     1 / 2
+3 / 58 kHz     107        3.20       62.50        54       2     1 / 2
+4 / 13 kHz      57        0.64      312.50        29       1     1 / 1
+5 / 6.7 kHz     49        0.32      625.00        25       1     1 / 1
+
+Lead candidate utilisation on XC7Z020 (report model): LUT 16.76 %, FF 10.15 %, DSP 11.36 %, BRAM36 0.71 %
+Replicated chains would need 352 multipliers; TDL for L=49: 18816 bits
+
+=== 09_nlms_demo.py ===
+Noise power before 1.50e-05, after 1.37e-05 (illustrative; differs from the report's line-by-line setup)
+mu = 0.1 in Q1.15: 0x0CCC truncated, 0x0CCD rounded
+eps = 0.05 in Q4.12: 0x00CD rounded
